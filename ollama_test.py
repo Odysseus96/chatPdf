@@ -1,36 +1,30 @@
-import ollama
-from ollama import Client
-from llama_index.llms.ollama import Ollama
-from llama_index.core.llms import ChatMessage
+from RAG.embedding import OllamaLocalEmbeddings
+from RAG.utils import *
 
+query = "国际争端"
 
-BASE_URL = 'http://localhost:8181'
-client = Client(host=BASE_URL)
-
-llm = Ollama(model='qwen:7b', base_url=BASE_URL)
-
-prompt = 'RAG是检索增强生成（Retrieval-Augmented Generation），是一种结合了检索（Retrieval）和生成（Generation）两种技术的人工智能方法。它主要用于提升大型语言模型（Large Language Models, LLMs）在处理知识密集型任务时的性能。'
-
-messages = [
-    ChatMessage(
-        role='system', content = prompt
-    ),
-    ChatMessage(role='user', content='如何实现一个RAG应用?')
+documents = [
+    "联合国就苏丹达尔富尔地区大规模暴力事件发出警告",
+    "土耳其、芬兰、瑞典与北约代表将继续就瑞典“入约”问题进行谈判",
+    "日本岐阜市陆上自卫队射击场内发生枪击事件 3人受伤",
+    "国家游泳中心（水立方）：恢复游泳、嬉水乐园等水上项目运营",
+    "我国首次在空间站开展舱外辐射生物学暴露实验",
 ]
 
-response = llm.stream_chat(messages)
+embed_model_name = "mxbai-embed-large"
+embedding_model = OllamaLocalEmbeddings(model=embed_model_name)
 
-for chunk in response:
-  print(chunk.delta, end='', flush=True)
+query_vec = embedding_model.get_embeddings(query)
+print(len(query_vec))
 
-# messages = [
-#     {'role':'system', 'content':prompt},
-#     {'role':'user', 'content':'如何实现一个RAG应用'}
-# ]
-#
-# response = client.chat(model='qwen:7b', messages=messages, stream=True)
-#
-# for chunk in response:
-#   print(chunk['message']['content'], end='', flush=True)
+doc_vecs = [
+    embedding_model.get_embeddings(doc)
+    for doc in documents
+]
+
+print(f"{embed_model_name} Cosine similarity:")
+for vec in doc_vecs:
+    print(cosine_similary(query_vec, vec))
+
 
 
